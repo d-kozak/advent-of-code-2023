@@ -49,20 +49,22 @@ fun main() {
         for (from in galaxies.indices) {
             for (to in from + 1 until galaxies.size) {
                 val dist = dist(from, to)
-                println("${from + 1} ${to + 1}: $dist")
+//                println("${from + 1} ${to + 1}: $dist")
                 res += dist
             }
         }
         return res
     }
 
+    fun index(x: Int, y: Int) = x * m + y
+
     fun solveFaster(): Long {
-        val dist = mutableMapOf<Pair<Pair<Int, Int>, Pair<Int, Int>>, Long>()
+        val dist = Array(n * m) { LongArray(n * m) }
         for (sx in 0 until n) {
             for (sy in 0 until m) {
                 for (nx in 0 until n) {
                     for (ny in 0 until m) {
-                        dist[(sx to sy) to (nx to ny)] = if (sx == nx && sy == ny) 0 else 10_000_000L
+                        dist[index(sx, sy)][index(nx, ny)] = if (sx == nx && sy == ny) 0 else 10_000_000L
                     }
                 }
             }
@@ -74,7 +76,7 @@ fun main() {
                     val ny = y + dy
                     if (nx in 0 until n && ny in 0 until m) {
                         val d = if (nx in expandedRows || ny in expandedCols) expansion else 1
-                        dist[(x to y) to (nx to ny)] = d
+                        dist[index(x, y)][index(nx, ny)] = d
                     }
                 }
             }
@@ -85,13 +87,10 @@ fun main() {
                     for (sy in 0 until m) {
                         for (ex in 0 until n) {
                             for (ey in 0 until m) {
-                                val start = sx to sy
-                                val end = ex to ey
-                                val mid = mx to my
-                                val direct = dist.getValue(start to end)
-                                val indirect = dist.getValue(start to mid) + dist.getValue(mid to end)
+                                val direct = dist[index(sx, sy)][index(ex, ey)]
+                                val indirect = dist[index(sx, sy)][index(mx, my)] + dist[index(mx, my)][index(ex, ey)]
                                 if (indirect < direct) {
-                                    dist[start to end] = indirect
+                                    dist[index(sx, sy)][index(ex, ey)] = indirect
                                 }
                             }
                         }
@@ -103,16 +102,27 @@ fun main() {
         var res = 0L
         for (from in galaxies.indices) {
             for (to in from + 1 until galaxies.size) {
-                val x = dist.getValue(galaxies[from] to galaxies[to])
+                val (sx, sy) = galaxies[from]
+                val (ex, ey) = galaxies[to]
+                val x = dist[index(sx, sy)][index(ex, ey)]
 //                println("${from + 1} ${to + 1}: $x")
                 res += x
             }
         }
         return res
     }
-    solve().println()
-//    solveFaster().println()
+
+//    timer {
+//        solve().println()
+//    }
+    timer {
+        solveFaster().println()
+    }
     expansion = 1_000_000
-    solve().println()
-//    solveFaster().println()
+//    timer {
+//        solve().println()
+//    }
+    timer {
+        solveFaster().println()
+    }
 }

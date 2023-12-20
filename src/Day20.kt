@@ -57,18 +57,39 @@ fun main() {
 
     var low = 0
     var high = 0
+    val input = readInput("Day20")
+    val modules = parseInput(input)
+
+    val feed = modules.values.find { it.next.any { it.name == "rx" } }!!
+    val seen = mutableMapOf<String, Int>()
+    for (module in modules.values) {
+        if (module.next.any { it.name == feed.name }) {
+            seen[module.name] = 0
+        }
+    }
+    val cycleLens = mutableMapOf<String, Int>()
     val part2 = true
 
-    fun pushButton(modules: Map<String, Module>, dump: Boolean = true): Boolean {
+    fun pushButton(modules: Map<String, Module>, it: Int): Boolean {
         val worklist = ArrayDeque<Triple<Module, Pulse, String>>()
         worklist.add(Triple(Broadcaster, Pulse.LOW, "button"))
         while (worklist.isNotEmpty()) {
             val (module, pulse, from) = worklist.removeFirst()
-            if (dump) {
-                println("$from -${pulse}-> ${module.name}")
-            }
-            if (part2 && pulse == Pulse.LOW && module.name == "rx") {
-                return true
+            println("$from -${pulse}-> ${module.name}")
+            if (part2 && module.name == feed.name && pulse == Pulse.HIGH) {
+                seen[from] = seen.getValue(from) + 1
+                if (from !in cycleLens) {
+                    cycleLens[from] = it
+                } else {
+                    check(it == seen.getValue(from) * cycleLens.getValue(from)) {
+                        "$it ${
+                            seen.getValue(from) * cycleLens.getValue(from)
+                        }}"
+                    }
+                }
+                if (seen.values.all { it >= 1 }) {
+                    return true
+                }
             }
             when (pulse) {
                 Pulse.LOW -> low++
@@ -105,21 +126,35 @@ fun main() {
         return false
     }
 
+    fun lcm(nums: Collection<Int>): Long {
+        var res = 1L
+        for (num in nums) {
+            var x = num
+            for (d in 2..x) {
+                if (x % d == 0) {
+                    x /= d
+                    res *= d
+                    if (x == 1) break
+                }
+            }
+        }
+        return res
+    }
 
-    val input = readInput("Day20")
-    val modules = parseInput(input)
+
     if (part2) {
         var it = 0
         while (true) {
             it++
-            if (pushButton(modules, dump = it % 1_000_000 == 0)) {
-                println(it)
+            if (pushButton(modules, it)) {
+                println(lcm(cycleLens.values))
+                return
             }
             println()
         }
     } else {
         repeat(1000) {
-            pushButton(modules)
+            pushButton(modules, it + 1)
         }
         println("$low $high ${low * high}")
     }

@@ -2,9 +2,9 @@ import java.util.*
 import kotlin.collections.ArrayDeque
 import kotlin.math.max
 
-data class Edge(val cost: Int, val target: Node)
-data class Node(val r: Int, val c: Int) : Comparable<Node> {
-    val edges = mutableSetOf<Edge>()
+data class EdgeOld(val cost: Int, val target: NodeOld)
+data class NodeOld(val r: Int, val c: Int) : Comparable<NodeOld> {
+    val edges = mutableSetOf<EdgeOld>()
     fun check() {
         for (edge in edges) {
             if (edge.target == this) {
@@ -13,7 +13,7 @@ data class Node(val r: Int, val c: Int) : Comparable<Node> {
         }
     }
 
-    override fun compareTo(other: Node): Int {
+    override fun compareTo(other: NodeOld): Int {
         val cmp = this.r.compareTo(other.r)
         if (cmp != 0) return cmp
         return this.c.compareTo(other.c)
@@ -116,19 +116,19 @@ fun main() {
         }
     }
 
-    fun createGraph(sr: Int, sc: Int): MutableMap<Pair<Int, Int>, Node> {
-        val nodes = mutableMapOf<Pair<Int, Int>, Node>()
+    fun createGraph(sr: Int, sc: Int): MutableMap<Pair<Int, Int>, NodeOld> {
+        val nodes = mutableMapOf<Pair<Int, Int>, NodeOld>()
         for (r in 0 until n) {
             for (c in 0 until m) {
                 if (cells[r][c] == '#') continue
-                val from = nodes.computeIfAbsent(r to c) { Node(r, c) }
+                val from = nodes.computeIfAbsent(r to c) { NodeOld(r, c) }
                 for ((dr, dc) in nei) {
                     val nr = r + dr
                     val nc = c + dc
                     if (nr in 0 until n && nc in 0 until m && cells[nr][nc] != '#') {
-                        val to = nodes.computeIfAbsent(nr to nc) { Node(nr, nc) }
-                        from.edges.add(Edge(1, to))
-                        to.edges.add(Edge(1, from))
+                        val to = nodes.computeIfAbsent(nr to nc) { NodeOld(nr, nc) }
+                        from.edges.add(EdgeOld(1, to))
+                        to.edges.add(EdgeOld(1, from))
                     }
                 }
             }
@@ -137,7 +137,7 @@ fun main() {
         return nodes
     }
 
-    fun simplify(nodes: MutableMap<Pair<Int, Int>, Node>): MutableSet<Node> {
+    fun simplify(nodes: MutableMap<Pair<Int, Int>, NodeOld>): MutableSet<NodeOld> {
         val liveNodes = TreeSet(nodes.values)
         var cnt = 0
         val worklist = ArrayDeque(nodes.values)
@@ -153,8 +153,8 @@ fun main() {
                 left.target.edges.removeIf { it.target == node }
                 right.target.edges.removeIf { it.target == node }
                 val total = left.cost + right.cost
-                left.target.edges.add(Edge(total, right.target))
-                right.target.edges.add(Edge(total, left.target))
+                left.target.edges.add(EdgeOld(total, right.target))
+                right.target.edges.add(EdgeOld(total, left.target))
                 worklist.add(left.target)
                 worklist.add(right.target)
                 left.target.check()
@@ -190,10 +190,10 @@ fun main() {
     }
     println("Nodes ${liveNodes.size}")
 
-    val seen = mutableSetOf<Node>()
+    val seen = mutableSetOf<NodeOld>()
     res = 0
 
-    fun go2(node: Node, dist: Int) {
+    fun go2(node: NodeOld, dist: Int) {
         if (node == endNode) {
             res = max(res, dist)
             return
